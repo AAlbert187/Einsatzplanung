@@ -3,23 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <title>Einsatzplanung</title>
+<style>
+body{
+    font-family: Arial;
+    text-align:center;
+    margin-top:50px;
+}
+button{
+    font-size:30px;
+    padding:20px;
+    margin:10px;
+}
+#status{
+    margin-top:30px;
+    font-size:24px;
+}
+</style>
 </head>
 <body>
 
 <h1>Einsatzplanung</h1>
 
-<button onclick="setName('Denis')">
-Denis
-</button>
+<button onclick="setName('Denis')">Denis</button>
+<button onclick="setName('Patrick')">Patrick</button>
 
-<button onclick="setName('Patrick')">
-Patrick
-</button>
+<div id="status">
+Lade Daten...
+</div>
 
 <script>
-function setName(name) {
-    alert(name + " wurde ausgewählt");
+
+const SUPABASE_URL =
+"https://xrjgxloabwikapgdprzy.supabase.co/rest/v1/Status?id=eq.1";
+
+const API_KEY =
+"sb_publishable_eszag9oir98E5jX5m3OFaQ_5PufTrQj";
+
+async function setName(name){
+
+    const now = new Date().toISOString();
+
+    const response = await fetch(SUPABASE_URL,{
+        method:"PATCH",
+        headers:{
+            "apikey":API_KEY,
+            "Authorization":"Bearer " + API_KEY,
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            name:name,
+            seit:now
+        })
+    });
+
+    if(response.ok){
+        loadStatus();
+    }else{
+        alert("Fehler beim Speichern");
+    }
 }
+
+async function loadStatus(){
+
+    const response = await fetch(
+        "https://xrjgxloabwikapgdprzy.supabase.co/rest/v1/Status?id=eq.1",
+        {
+            headers:{
+                "apikey":API_KEY,
+                "Authorization":"Bearer " + API_KEY
+            }
+        }
+    );
+
+    const data = await response.json();
+
+    if(data.length > 0){
+
+        let seit = "";
+
+        if(data[0].seit){
+            seit = new Date(data[0].seit)
+                .toLocaleString("de-DE");
+        }
+
+        document.getElementById("status").innerHTML =
+            "<b>Aktuell:</b> "
+            + data[0].name
+            + "<br><br><b>Seit:</b> "
+            + seit;
+    }
+}
+
+loadStatus();
+setInterval(loadStatus,10000);
+
 </script>
 
 </body>
